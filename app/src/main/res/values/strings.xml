@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
   <string name="app_name">Hello World</string>
+  <string name="a11y_description">Permite a FocusBot leer la pantalla de Firefox Focus y simular toques para automatizar busquedas y borrar la sesion.</string>
+  <string name="accessibility_service_label">Servicio de accesibilidad de FocusBot</string>
 </resources>
