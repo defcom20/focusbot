@@ -104,4 +104,63 @@ class BrowserController(private val context: Context) {
     }
 
     fun dump() = a11y?.dumpTree()
+
+    // --------------------------------------------------- ciclo de aprobación de test
+
+    /**
+     * Un ciclo configurable: abre [url], espera que cargue, busca todas las
+     * coincidencias del botón "Test aprobar" y toca la que está en la posición
+     * [buttonPosition] (1 = primera encontrada, 2 = segunda, etc. — ya que el
+     * texto es idéntico en todos los botones y el data-unique del DOM no es
+     * visible para accesibilidad). Luego toca el botón de confirmación
+     * ([confirmText]) y espera el alert final de éxito ([successText]).
+     * Llamar desde una corrutina.
+     */
+    suspend fun runTestApprovalCycle(
+        url: String,
+        buttonPosition: Int,
+        confirmText: String,
+        successText: String
+    ): Boolean {
+        if (!openUrl(url)) return false
+        val svc = a11y ?: return false
+        delay(3000) // esperar carga inicial de la página
+
+        // 1. buscar todas las coincidencias de "Test aprobar" y tomar la posición pedida
+        val target = svc.waitFor(timeoutMs = 15000) {
+            svc.findAllByText("Test aprobar").getOrNull(buttonPosition - 1)
+        } ?: return false
+        svc.click(target)
+
+        // 2. esperar y tocar el botón de confirmación
+        val confirmButton = svc.waitFor(timeoutMs = 15000) { svc.findByText(confirmText) }
+            ?: return false
+        svc.click(confirmButton)
+
+        // 3. esperar el alert final de éxito
+        svc.waitFor(timeoutMs = 15000) { svc.findByText(successText) } ?: return false
+
+        // 4. cerrar la página y volver
+        svc.back()
+        delay(1000)
+        return true
+    }
+
+    /**
+     * Repite [runTestApprovalCycle] mientras [shouldContinue] siga devolviendo
+     * true y cada ciclo tenga éxito. Llamar desde una corrutina.
+     */
+    suspend fun runTestApprovalLoop(
+        url: String,
+        buttonPosition: Int,
+        confirmText: String,
+        successText: String,
+        shouldContinue: () -> Boolean
+    ): Boolean {
+        while (shouldContinue()) {
+            if (!runTestApprovalCycle(url, buttonPosition, confirmText, successText)) return false
+            delay(1500)
+        }
+        return true
+    }
 }

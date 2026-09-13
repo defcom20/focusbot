@@ -70,6 +70,13 @@ class FocusAccessibilityService : AccessibilityService() {
     fun findByDesc(desc: String): AccessibilityNodeInfo? =
         walk(root()).firstOrNull { it.contentDescription?.toString()?.contains(desc, true) == true }
 
+    /** Devuelve TODOS los nodos que coinciden con [text] (no solo el primero) */
+    fun findAllByText(text: String, exact: Boolean = false): List<AccessibilityNodeInfo> {
+        val r = root() ?: return emptyList()
+        val matches = r.findAccessibilityNodeInfosByText(text) ?: return emptyList()
+        return if (exact) matches.filter { it.text?.toString() == text } else matches
+    }
+
     /** Espera hasta [timeoutMs] a que aparezca un nodo. Llamar desde una corrutina. */
     suspend fun waitFor(
         timeoutMs: Long = 8000,

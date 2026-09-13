@@ -17,7 +17,9 @@ class MainActivity : Activity() {
 
     private lateinit var controller: BrowserController
     private lateinit var status: TextView
+    private lateinit var loopButton: Button
     private val scope = CoroutineScope(Dispatchers.Main)
+    @Volatile private var loopRunning = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,11 +40,31 @@ class MainActivity : Activity() {
         }
         root.addView(input, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
 
-        fun button(label: String, action: () -> Unit) {
-            root.addView(Button(this).apply {
+        val positionInput = EditText(this).apply {
+            hint = "posición del botón Test aprobar (1, 2, 3...)"
+            setText("1")
+        }
+        root.addView(positionInput, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
+
+        val confirmTextInput = EditText(this).apply {
+            hint = "texto del botón de confirmación"
+            setText("Sí, TESTEAR")
+        }
+        root.addView(confirmTextInput, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
+
+        val successTextInput = EditText(this).apply {
+            hint = "texto del alert final de éxito"
+            setText("⚠️ TEST APROBADO")
+        }
+        root.addView(successTextInput, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
+
+        fun button(label: String, action: () -> Unit): Button {
+            val b = Button(this).apply {
                 text = label
                 setOnClickListener { action() }
-            }, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
+            }
+            root.addView(b, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
+            return b
         }
 
         button("1. Activar accesibilidad") { controller.openAccessibilitySettings() }
@@ -58,6 +80,25 @@ class MainActivity : Activity() {
         }
         button("4. Borrar sesión") { controller.erase() }
         button("5. Dump del árbol UI (Logcat)") { controller.dump() }
+        loopButton = button("6. Loop Test Aprobar") {
+            if (loopRunning) {
+                loopRunning = false
+            } else {
+                loopRunning = true
+                loopButton.text = "Detener loop"
+                scope.launch {
+                    val position = positionInput.text.toString().toIntOrNull() ?: 1
+                    val confirmText = confirmTextInput.text.toString()
+                    val successText = successTextInput.text.toString()
+                    val ok = controller.runTestApprovalLoop(
+                        input.text.toString(), position, confirmText, successText
+                    ) { loopRunning }
+                    loopRunning = false
+                    loopButton.text = "6. Loop Test Aprobar"
+                    if (!ok) toast("Loop detenido (revisa Logcat)")
+                }
+            }
+        }
 
         setContentView(root)
     }
