@@ -1,8 +1,11 @@
 package com.example.helloworld
 
 import android.app.Activity
+import android.content.Intent
 import android.content.SharedPreferences
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.Button
@@ -112,6 +115,20 @@ class MainActivity : Activity() {
                     loopButton.text = "6. Loop Test Aprobar"
                     if (!ok) toast("Loop detenido (revisa Logcat)")
                 }
+            }
+        }
+        button("7. Activar botón flotante") {
+            if (!Settings.canDrawOverlays(this)) {
+                startActivity(
+                    Intent(
+                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:$packageName")
+                    )
+                )
+                toast("Concedé el permiso de superposición y volvé a tocar este botón")
+            } else {
+                startService(Intent(this, FloatingButtonService::class.java))
+                toast("Botón flotante activado")
             }
         }
 
