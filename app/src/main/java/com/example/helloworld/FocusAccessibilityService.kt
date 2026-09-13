@@ -122,7 +122,7 @@ class FocusAccessibilityService : AccessibilityService() {
     /** Enter / "Ir" del teclado (API 30+); si no, intenta el botón de la UI */
     fun pressEnter(node: AccessibilityNodeInfo?): Boolean {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && node != null) {
-            if (node.performAction(AccessibilityNodeInfo.ACTION_IME_ENTER.id)) return true
+            if (node.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_IME_ENTER.id)) return true
         }
         return clickByText("Ir") || clickByText("Go")
     }
