@@ -1,6 +1,7 @@
 package com.example.helloworld
 
 import android.app.Activity
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
@@ -18,12 +19,19 @@ class MainActivity : Activity() {
     private lateinit var controller: BrowserController
     private lateinit var status: TextView
     private lateinit var loopButton: Button
+    private lateinit var prefs: SharedPreferences
+    private lateinit var input: EditText
+    private lateinit var rowNameInput: EditText
+    private lateinit var buttonTextInput: EditText
+    private lateinit var confirmTextInput: EditText
+    private lateinit var successTextInput: EditText
     private val scope = CoroutineScope(Dispatchers.Main)
     @Volatile private var loopRunning = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         controller = BrowserController(this)
+        prefs = getSharedPreferences("focusbot_config", MODE_PRIVATE)
 
         val pad = (16 * resources.displayMetrics.density).toInt()
         val root = LinearLayout(this).apply {
@@ -34,32 +42,33 @@ class MainActivity : Activity() {
         status = TextView(this)
         root.addView(status)
 
-        val input = EditText(this).apply {
+        input = EditText(this).apply {
             hint = "url o búsqueda"
-            setText("wikipedia.org")
+            setText(prefs.getString("url", "wikipedia.org"))
         }
         root.addView(input, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
 
-        val rowNameInput = EditText(this).apply {
+        rowNameInput = EditText(this).apply {
             hint = "nombre de la fila (ej: Juan Pérez)"
+            setText(prefs.getString("rowName", ""))
         }
         root.addView(rowNameInput, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
 
-        val buttonTextInput = EditText(this).apply {
+        buttonTextInput = EditText(this).apply {
             hint = "texto del botón a testear"
-            setText("Test aprobar")
+            setText(prefs.getString("buttonText", "Test aprobar"))
         }
         root.addView(buttonTextInput, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
 
-        val confirmTextInput = EditText(this).apply {
+        confirmTextInput = EditText(this).apply {
             hint = "texto del botón de confirmación"
-            setText("Sí, TESTEAR")
+            setText(prefs.getString("confirmText", "Sí, TESTEAR"))
         }
         root.addView(confirmTextInput, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
 
-        val successTextInput = EditText(this).apply {
+        successTextInput = EditText(this).apply {
             hint = "texto del alert final de éxito"
-            setText("⚠️ TEST APROBADO")
+            setText(prefs.getString("successText", "⚠️ TEST APROBADO"))
         }
         root.addView(successTextInput, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
 
@@ -114,6 +123,18 @@ class MainActivity : Activity() {
         val pkg = controller.installedPackage() ?: "NO instalado"
         val svc = if (controller.isServiceEnabled()) "activo" else "DESACTIVADO"
         status.text = "Navegador: $pkg\nServicio de accesibilidad: $svc\n"
+    }
+
+    /** Guarda la configuración de los 5 campos para que persista al salir de la app */
+    override fun onPause() {
+        super.onPause()
+        prefs.edit()
+            .putString("url", input.text.toString())
+            .putString("rowName", rowNameInput.text.toString())
+            .putString("buttonText", buttonTextInput.text.toString())
+            .putString("confirmText", confirmTextInput.text.toString())
+            .putString("successText", successTextInput.text.toString())
+            .apply()
     }
 
     private fun toast(m: String) = Toast.makeText(this, m, Toast.LENGTH_SHORT).show()
