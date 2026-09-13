@@ -11,6 +11,7 @@ import android.view.WindowManager
 import android.widget.Button
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
@@ -103,6 +104,7 @@ class FloatingButtonService : Service() {
             val url = getSharedPreferences("focusbot_config", MODE_PRIVATE)
                 .getString("url", "wikipedia.org") ?: "wikipedia.org"
             controller.erase()
+            delay(800) // esperar a que termine la animación de borrado antes de reabrir
             controller.openUrl(url)
         }
     }
