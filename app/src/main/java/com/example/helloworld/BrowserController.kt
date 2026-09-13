@@ -108,17 +108,18 @@ class BrowserController(private val context: Context) {
     // --------------------------------------------------- ciclo de aprobación de test
 
     /**
-     * Un ciclo configurable: abre [url], espera que cargue, busca todas las
-     * coincidencias del botón "Test aprobar" y toca la que está en la posición
-     * [buttonPosition] (1 = primera encontrada, 2 = segunda, etc. — ya que el
-     * texto es idéntico en todos los botones y el data-unique del DOM no es
-     * visible para accesibilidad). Luego toca el botón de confirmación
-     * ([confirmText]) y espera el alert final de éxito ([successText]).
-     * Llamar desde una corrutina.
+     * Un ciclo configurable: abre [url], espera que cargue, busca la fila que
+     * contiene [rowName] y dentro de esa fila toca el botón "Test aprobar"
+     * (ya que el texto del botón es idéntico en todas las filas y el
+     * data-unique del DOM no es visible para accesibilidad, se ubica el botón
+     * correcto subiendo desde el nombre de la fila). Luego toca el botón de
+     * confirmación ([confirmText]) y espera el alert final de éxito
+     * ([successText]). Llamar desde una corrutina.
      */
     suspend fun runTestApprovalCycle(
         url: String,
-        buttonPosition: Int,
+        rowName: String,
+        buttonText: String,
         confirmText: String,
         successText: String
     ): Boolean {
@@ -126,9 +127,9 @@ class BrowserController(private val context: Context) {
         val svc = a11y ?: return false
         delay(3000) // esperar carga inicial de la página
 
-        // 1. buscar todas las coincidencias de "Test aprobar" y tomar la posición pedida
+        // 1. buscar el botón [buttonText] dentro de la fila de [rowName]
         val target = svc.waitFor(timeoutMs = 15000) {
-            svc.findAllByText("Test aprobar").getOrNull(buttonPosition - 1)
+            svc.findButtonInRow(rowName, buttonText)
         } ?: return false
         svc.click(target)
 
@@ -152,13 +153,14 @@ class BrowserController(private val context: Context) {
      */
     suspend fun runTestApprovalLoop(
         url: String,
-        buttonPosition: Int,
+        rowName: String,
+        buttonText: String,
         confirmText: String,
         successText: String,
         shouldContinue: () -> Boolean
     ): Boolean {
         while (shouldContinue()) {
-            if (!runTestApprovalCycle(url, buttonPosition, confirmText, successText)) return false
+            if (!runTestApprovalCycle(url, rowName, buttonText, confirmText, successText)) return false
             delay(1500)
         }
         return true

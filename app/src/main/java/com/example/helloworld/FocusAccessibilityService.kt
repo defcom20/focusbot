@@ -77,6 +77,25 @@ class FocusAccessibilityService : AccessibilityService() {
         return if (exact) matches.filter { it.text?.toString() == text } else matches
     }
 
+    /**
+     * Busca un nodo cuyo texto contenga [rowName] y sube por sus padres buscando
+     * el contenedor de esa fila; dentro de cada ancestro busca un nodo clickeable
+     * con texto [buttonText] (el botón de esa fila específica). Sube como máximo
+     * [maxAncestorLevels] niveles antes de rendirse.
+     */
+    fun findButtonInRow(rowName: String, buttonText: String, maxAncestorLevels: Int = 5): AccessibilityNodeInfo? {
+        var node = findByText(rowName) ?: return null
+        repeat(maxAncestorLevels) {
+            val ancestor = node.parent ?: return null
+            val found = walk(ancestor).firstOrNull {
+                it.text?.toString()?.contains(buttonText, true) == true
+            }
+            if (found != null) return found
+            node = ancestor
+        }
+        return null
+    }
+
     /** Espera hasta [timeoutMs] a que aparezca un nodo. Llamar desde una corrutina. */
     suspend fun waitFor(
         timeoutMs: Long = 8000,

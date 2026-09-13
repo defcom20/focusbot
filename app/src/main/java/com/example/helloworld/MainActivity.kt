@@ -40,11 +40,16 @@ class MainActivity : Activity() {
         }
         root.addView(input, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
 
-        val positionInput = EditText(this).apply {
-            hint = "posición del botón Test aprobar (1, 2, 3...)"
-            setText("1")
+        val rowNameInput = EditText(this).apply {
+            hint = "nombre de la fila (ej: Juan Pérez)"
         }
-        root.addView(positionInput, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
+        root.addView(rowNameInput, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
+
+        val buttonTextInput = EditText(this).apply {
+            hint = "texto del botón a testear"
+            setText("Test aprobar")
+        }
+        root.addView(buttonTextInput, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
 
         val confirmTextInput = EditText(this).apply {
             hint = "texto del botón de confirmación"
@@ -87,11 +92,12 @@ class MainActivity : Activity() {
                 loopRunning = true
                 loopButton.text = "Detener loop"
                 scope.launch {
-                    val position = positionInput.text.toString().toIntOrNull() ?: 1
+                    val rowName = rowNameInput.text.toString()
+                    val buttonText = buttonTextInput.text.toString()
                     val confirmText = confirmTextInput.text.toString()
                     val successText = successTextInput.text.toString()
                     val ok = controller.runTestApprovalLoop(
-                        input.text.toString(), position, confirmText, successText
+                        input.text.toString(), rowName, buttonText, confirmText, successText
                     ) { loopRunning }
                     loopRunning = false
                     loopButton.text = "6. Loop Test Aprobar"
