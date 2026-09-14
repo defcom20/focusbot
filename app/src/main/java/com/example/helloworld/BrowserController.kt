@@ -105,6 +105,9 @@ class BrowserController(private val context: Context) {
 
     fun dump() = a11y?.dumpTree()
 
+    /** Manda Focus a segundo plano (Inicio), para forzar un reinicio real al reabrirlo */
+    fun goHome(): Boolean = a11y?.goHome() ?: false
+
     // --------------------------------------------------- ciclo de aprobación de test
 
     /**

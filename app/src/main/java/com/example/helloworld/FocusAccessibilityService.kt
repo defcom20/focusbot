@@ -186,6 +186,9 @@ class FocusAccessibilityService : AccessibilityService() {
 
     fun back() = performGlobalAction(GLOBAL_ACTION_BACK)
 
+    /** Manda a Inicio para forzar que la app actual quede en segundo plano */
+    fun goHome() = performGlobalAction(GLOBAL_ACTION_HOME)
+
     // ---------------------------------------------------------------- debug
 
     /** Imprime el árbol de la pantalla en Logcat. Úsalo para descubrir los viewIds reales. */

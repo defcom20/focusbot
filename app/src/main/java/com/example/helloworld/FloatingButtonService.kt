@@ -49,8 +49,10 @@ class FloatingButtonService : Service() {
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.TOP or Gravity.START
-            x = 0
-            y = 200
+            // lejos del borde izquierdo: en x=0 el sistema suele reservar esa
+            // franja para el gesto de "volver atrás" y se come el toque
+            x = 100
+            y = 300
         }
 
         button = Button(this).apply { text = "↻" }
@@ -98,13 +100,21 @@ class FloatingButtonService : Service() {
         windowManager.addView(button, params)
     }
 
-    /** Borra la sesión actual de Focus y la vuelve a abrir con la URL configurada */
+    /**
+     * Borra la sesión actual de Focus, lo manda a Inicio (para forzar que
+     * quede en segundo plano de verdad) y lo vuelve a abrir con la URL
+     * configurada. Mandarlo a Inicio es necesario: si Focus ya está en
+     * primer plano con esa misma URL, reabrirlo con el mismo Intent no
+     * fuerza una recarga, solo trae la pantalla actual al frente.
+     */
     private fun restartFocus() {
         scope.launch {
             val url = getSharedPreferences("focusbot_config", MODE_PRIVATE)
                 .getString("url", "wikipedia.org") ?: "wikipedia.org"
             controller.erase()
-            delay(800) // esperar a que termine la animación de borrado antes de reabrir
+            delay(500)
+            controller.goHome()
+            delay(500)
             controller.openUrl(url)
         }
     }
